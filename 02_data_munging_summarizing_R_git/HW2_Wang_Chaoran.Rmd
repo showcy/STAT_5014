@@ -1,0 +1,321 @@
+---
+title: "HW2_Wang_Chaoran"
+author: "Chaoran Wang"
+date: '`r Sys.Date()`'
+header-includes:
+   - \usepackage{float}
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(dplyr)
+library(tidyr)
+library(stargazer)
+library(swirl)
+library(data.table)
+```
+
+## Fineshed Problem 1 to 3
+
+## Problem 4
+One of the benefits of Version Control is that it is not necessary to notify my teammates that I would modify some files in our shared folders and they should not work on them at the same time. The original process was unrealistic and wrong. Now, with the Version Control system, all my teammates should be able to work on the files at the same time and we are not worried about losing anything.
+
+## Problem 5
+### (a)
+First, I read in and create a tidy dataset. To tidy the data, I first read in the data and remove the first row. Then I extract all rows with interal number 1-10 out and put them in (a) set. In this dataset, I corrected the column name to be what they should to be, Item and Operator 1 to 5. Next, I extract all other rows into (b) set. Since the first column is character at first, I change it into numeric. Then, I combine two sets, gather them based on operator number, and arrange them into the correct order. 
+
+After tidying, a summary is in Table 1. Since I am not sure what the experiment is actually, I cannot analyze the data based on the information I have. It looks not like a simple linear model. The codes are in Appendix.
+```{r Problem5_Sensory_analysis, echo=F, eval=T}
+########################### 
+#Problem5_Sensory_analysis  
+#get data  
+###########################
+url1 <- "http://www2.isye.gatech.edu/~jeffwu/wuhamadabook/data/Sensory.dat"
+sen_raw <- read.table(url1, header = F, skip = 1, fill = T, stringsAsFactors = F)
+sen_tidy <- sen_raw[-1,]
+sen_tidy_a <- filter(.data = sen_tidy,V1 %in% 1:10) 
+sen_tidy_a <- rename(sen_tidy_a, Item = V1,V1 = V2,V2 = V3,V3 = V4,V4 = V5,V5 = V6)
+sen_tidy_b <- filter(.data = sen_tidy,!(V1 %in% 1:10))
+sen_tidy_b <- mutate(sen_tidy_b, Item = rep(as.character(1:10),each = 2))
+sen_tidy_b <- mutate(sen_tidy_b, V1 = as.numeric(V1))
+sen_tidy_b <- select(sen_tidy_b, c(Item,V1:V5))
+sen_tidy <- bind_rows(sen_tidy_a,sen_tidy_b)
+sen_tidy <- gather(sen_tidy,Operator,value,V1:V5)
+sen_tidy <- mutate(sen_tidy, Operator = gsub("V","",Operator))
+sen_tidy <- arrange(sen_tidy, Item)
+##########################
+```
+
+```{r Problem5__Sensory_fig, eval=T, echo=F, cache=F, include=T, results='asis'}
+########################### 
+#Problem5_Sensory_analysis  
+#plot 
+###########################
+knitr::kable(summary(sen_tidy),caption="Sensory Data Summary")
+###########################
+```
+
+### (b)
+First, I read in and create a tidy dataset. To tidy the dataset, I first rename the columns. I then separate and combine the dataset to make it has two columns only. In order to make the data be more readable, I add another column which is the respective year (1900 + *).
+
+After tidying, a summary is in Table 2 with a plot in Figure 1 are created. Then I fit the linear model (Table 3) and plot the fitted line on Figure 1. The fitted model looks not bad. The codes are in Appendix.
+```{r Problem5_LJD_analysis, echo=F, eval=T}
+########################### 
+#Problem5_LJD_analysis  
+#get data  
+###########################
+url2 <- "http://www2.isye.gatech.edu/~jeffwu/wuhamadabook/data/LongJumpData.dat"
+LJD_raw <- read.table(url2, header = F, skip = 1, fill = T, stringsAsFactors = F)
+colnames(LJD_raw) <- rep(c("Year_00", "Long_Jump"), 4)
+LJD_raw1 <- bind_rows(LJD_raw[,1:2],LJD_raw[,3:4])
+LJD_raw2 <- bind_rows(LJD_raw[,5:6],LJD_raw[1:4,7:8])
+LJD_tidy <- bind_rows(LJD_raw1,LJD_raw2)
+Year <- LJD_tidy[,1] + 1900
+LJD_tidy$Year <- Year
+LJD_tidy <- LJD_tidy[c(1,3,2)]
+###########################
+```
+
+```{r Problem5_LJD_fig, eval=T, echo=F, cache=F, include=T, results='asis', fig.cap="Gold Medal performance for Olympic Men's Long Jump since 1886",fig.width=3, fig.height=3}
+########################### 
+#Problem5_LJD_analysis  
+#plot 
+###########################
+knitr::kable(summary(LJD_tidy),caption="LJD Data Summary")
+LJD_tidy_lm<-lm(Long_Jump~Year, data=LJD_tidy)
+stargazer(LJD_tidy_lm,title = "Fitting Linear Models of LJD Data",header = F,no.space=T,single.row=T)
+plot(LJD_tidy$Year, LJD_tidy$Long_Jump, xlab="Year", ylab="Long Jump Performance")
+lines(LJD_tidy$Year,LJD_tidy_lm$fitted,col="green",lwd=3,lty=1)
+###########################
+```
+
+### (c)
+First, I read in and create a tidy dataset. I first rename the columns. I then separate and combine the dataset to make it has two columns only. In order to make the variables to be continuous and increasing, I order the weight column.
+
+After tidying, a summary is in Table 4 with a plot in Figure 2 are created. The codes are in Appendix.
+```{r Problem5_BBW_analysis, echo=F, eval=T}
+########################### 
+#Problem5_BBW_analysis  
+#get data  
+###########################
+url3 <- "http://www2.isye.gatech.edu/~jeffwu/wuhamadabook/data/BrainandBodyWeight.dat"
+BBW_raw <- read.table(url3, header = F, skip = 1, fill = T, stringsAsFactors = F)
+colnames(BBW_raw) <- rep(c("Body_Wt", "Brain_Wt"), 3)
+BBW_raw1 <- bind_rows(BBW_raw[,1:2],BBW_raw[,3:4])
+BBW_tidy <- bind_rows(BBW_raw1,BBW_raw[1:20,5:6])
+attach(BBW_tidy)
+BBW_tidy <- BBW_tidy[order(Body_Wt),]
+###########################
+```
+
+```{r Problem5_BBW_fig, eval=T, echo=F, cache=F, include=T, results='asis', fig.cap="Brain weight (g) vs. body weight (kg) for 62 species", fig.width=3, fig.height=3}
+########################### 
+#Problem5_BBW_analysis  
+#plot 
+###########################
+knitr::kable(summary(BBW_tidy),caption="BBW Data Summary")
+plot(BBW_tidy, xlab="Body Weight", ylab="Brain Weight")
+###########################
+```
+
+However, from the Figure 2 above, we can see there are two obvious outliers which might affect the accurate of our fitted model. I choose to delete them and fit the linear model. The summary of the modified dataset are in Table 5. Then I fit the linear model (Table 6) and plot the modified data and the fitted line on Figure 3. We can see the point at top left corner seems to be another outlier but the fitted line looks not bad. Since the procedure are similar and we are not focus on analysis at this time, I do not remove that point and process the data again. The codes are in Appendix.
+
+```{r Problem5_BBW_redo, eval=T, echo=F, cache=F, include=T, results='asis', fig.cap="Brain weight (g) vs. body weight (kg) for 60 species",fig.width=5, fig.height=5, fig.pos='H'}
+########################### 
+#Problem5_BBW_analysis  
+#remove outliers
+###########################
+BBW_tidy_new <- BBW_tidy[-c(61,62),]
+knitr::kable(summary(BBW_tidy_new),caption="BBW Data Summary Re-do")
+BBW_tidy_lm<-lm(Brain_Wt~Body_Wt, data=BBW_tidy_new)
+stargazer(BBW_tidy_lm,title = "Fitting Linear Models of BBW Data",header = F,no.space=T,single.row=T)
+plot(BBW_tidy_new, xlab="Body Weight", ylab="Brain Weight")
+lines(BBW_tidy_new$Body_Wt,BBW_tidy_lm$fitted,col="green",lwd=3,lty=1)
+###########################
+```
+
+### (d)
+First, I read in and create a tidy dataset. To tidy the data, I first read it in R. The dataset looks messy because it has 3 values in one cell and the first row name looks bad. I separate the data based on 3 different densities. Since the data has "10.1," after separating, I use mutate function to remove it. Then, I just do some basic cleaning work to rename and re-order the dataset.
+
+After tidying, a summary is in Table 7. Since I am not sure what the experiment is actually, I cannot analyze the data based on the information I have. It looks not like a simple linear model so I do not to linear model analysis. The codes are in Appendix.
+
+```{r Problem5_tomato_analysis, echo=F, eval=T}
+########################### 
+#Problem5_tomato_analysis  
+#get data  
+###########################
+url4 <- "http://www2.isye.gatech.edu/~jeffwu/wuhamadabook/data/tomato.dat"
+tom_raw <- read.table(url4, header = F, skip = 2, fill = T, stringsAsFactors = F, comment.char = "")
+tom_tidy <- separate(tom_raw, V2, into=paste("Den_10000",1:3,sep="_"), sep=",", remove=T, extra="merge")
+tom_tidy <- separate(tom_tidy, V3, into=paste("Den_20000",1:3,sep="_"), sep=",", remove=T, extra="merge")
+tom_tidy <- separate(tom_tidy, V4, into=paste("Den_30000",1:3,sep="_"), sep=",", remove=T, extra="merge")
+tom_tidy <- mutate(tom_tidy, Den_10000_3=gsub(",","",Den_10000_3))
+tom_tidy <- gather(tom_tidy, Density, value, Den_10000_1:Den_30000_3)
+tom_tidy <- mutate(tom_tidy, Density=gsub("Den_","",Density))
+tom_tidy <- separate(tom_tidy, Density, into=c("Density", "Triplicates"))
+tom_tidy <- mutate(tom_tidy, Varieties=gsub("\\\\#","",V1))
+tom_tidy <- transform(tom_tidy, Yields = as.numeric(value))
+tom_tidy <- select(tom_tidy, Varieties, Density, Triplicates, Yields)
+tom_tidy <- arrange(tom_tidy, Varieties)
+##########################
+```
+
+```{r Problem5__tomato_fig, eval=T, echo=F, cache=F, include=T, results='asis'}
+########################### 
+#Problem5_tomato_analysis  
+#plot 
+###########################
+knitr::kable(summary(tom_tidy),caption="Tomato Data Summary")
+###########################
+```
+
+
+## Problem 6
+After reading the data in R, I done a brief clean of it such as rename the variables, remove NAs, and select the three columns we are interested in. Since the Foliage Color is a categorical response, in order to to do linear regression analysis, I changed them to numeric. Even though I think this way is rough and not very correct, I do not know other way to solve the problem.
+
+```{r Problem6_data, eval=T, echo=F, cache=F, include=T}
+########################### 
+#Problem6
+###########################
+# Path to data
+.datapath <- file.path(path.package('swirl'), 'Courses','R_Programming_E', 'Looking_at_Data','plant-data.txt')
+# Read in data
+plants <- read.csv(.datapath, strip.white=TRUE, na.strings="")
+
+# Remove annoying columns
+.cols2rm <- c('Accepted.Symbol', 'Synonym.Symbol')
+plants <- plants[, !(names(plants) %in% .cols2rm)]
+
+# Make names pretty
+names(plants) <- c('Scientific_Name', 'Duration', 'Active_Growth_Period','Foliage_Color', 'pH_Min', 'pH_Max','Precip_Min', 'Precip_Max','Shade_Tolerance', 'Temp_Min_F')
+plants_tidy <- select(plants, Foliage_Color, pH_Min, pH_Max)
+plants_tidy <- plants_tidy[complete.cases(plants_tidy),]
+
+# Chenge Foliage Color into numeric variables
+plants_tidy$Color.factor <- as.numeric(factor(plants_tidy$Foliage_Color,levels=c("Dark Green","Gray-Green","Green","Yellow-Green","Red","White-Gray")))
+# Remove Foliage_Color
+plants_tidy_new <- plants_tidy[,-1]
+plants_tidy_new$pH_Dif <- plants_tidy_new[,2] - plants_tidy_new[,1]
+attach(plants_tidy_new)
+##########################
+```
+
+After converting the response into numeric, I begin to analysis the relationship. Since I am not sure what combination you want for pH_Min and pH_Max, I am doing simple linear regression on them separately, multiple linear regression on them, simple regression on their difference, and take log of the response to get the fit. The summary and ANOVA table are shown below. The one with pH_Max only seems to be the best one. However, I have to say, the basic of this analysis is **not reasonable** in my idea because it seems not logical to change the categorical response to numeric. The codes are in Appendix.
+
+Note: I do not know why but I keep getting error when using "stargazer" to show lm table. So I just print the summary directly.
+
+```{r Problem6_analysis, eval=T, echo=F, cache=F, include=T, results='asis'}
+########################### 
+#Problem6_analysis  
+#plot 
+###########################
+knitr::kable(summary(plants_tidy_new),caption="Plants Data Summary")
+lm1 <- lm(Color.factor~pH_Min)
+summary(lm1)
+# stargazer(lm1,title = "Fitting Linear Models of fitting Plants Data with pH_Min",header = F,no.space=T,single.row=T)
+knitr::kable(anova(lm1),caption="ANOVA of fitting Plants Data with pH_Min")
+lm2 <- lm(Color.factor~pH_Max)
+summary(lm2)
+# stargazer(lm2,title = "Fitting Linear Models of fitting Plants Data with pH_Max",header = F,no.space=T,single.row=T)
+knitr::kable(anova(lm2),caption="ANOVA of fitting Plants Data with pH_Max")
+lm3 <- lm(Color.factor~pH_Min+pH_Max)
+summary(lm3)
+# stargazer(lm3,title = "Fitting Linear Models of fitting Plants Data with pH_Min and pH_Max",header = F,no.space=T,single.row=T)
+knitr::kable(anova(lm3),caption="ANOVA of fitting Plants Data with pH_Min and pH_Max")
+lm4 <- lm(Color.factor~pH_Dif)
+summary(lm4)
+# stargazer(lm4,title = "Fitting Linear Models of fitting Plants Data with pH_Dif",header = F,no.space=T,single.row=T)
+knitr::kable(anova(lm4),caption="ANOVA of fitting Plants Data with pH_Dif")
+lm5 <- lm(log(Color.factor)~pH_Min+pH_Max)
+summary(lm5)
+# stargazer(lm5,title = "Fitting Linear Models of fitting log of Plants Data with pH_Min and pH_Max",header = F,no.space=T,single.row=T)
+knitr::kable(anova(lm5),caption="ANOVA of fitting Plants Data with pH_Min and pH_Max")
+
+###########################
+```
+
+## Problem 7
+For this problem, we are trying to munge some large datasets and give a briefly summary. Since the datasets are very large, it might be a good idea to read some of them (first 100 rows here) in R and finish the necessary work of columns first. The files are local on my computer. The directory might be different.
+
+```{r Problem7_read, eval=T, echo=F, cache=F, include=T, results='asis'}
+    ########################### 
+    #Problem7 
+    #get data  
+    ########################### 
+    Car_Gebreken_raw <- read.csv("D:/Open_Data_RDW__Gebreken.csv",stringsAsFactors = F, nrows=100, header=T,quote = '"')
+    Car_Geconstat_raw <- read.csv("D:/Open_Data_RDW__Geconstateerde_Gebreken.csv", stringsAsFactors = F, nrows=100, header=T)
+    Car_Person_raw <- read.csv("D:/Personenauto_basisdata.csv",stringsAsFactors = F, nrows=100, header=T)
+    
+    Car_Gebreken_raw.colclass <- sapply(Car_Gebreken_raw,class)
+    Car_Geconstat_raw.colclass <- sapply(Car_Geconstat_raw,class)
+    Car_Person_raw.colclass <- sapply(Car_Person_raw,class)
+    
+    print("Gebreken")
+    print(Car_Gebreken_raw.colclass)
+
+    print("Geconstat")
+    print(Car_Geconstat_raw.colclass)
+
+    print("Personen")
+    print(Car_Person_raw.colclass)
+    ##########################
+```
+
+What columns they have are not shown in English which makes me confused. But never mind, I use Google Translate to understand what the columns mean. Continuing with the datasets, I figured that it was unrealistic to read all data in and analyze them because there are so much information in these three datasets. That might be better to focus just one aspect, maybe the data in one year, to be our interest. So I choose rows in 2017 to be my interest just as Dr. Settlage required. And for the columns, I also just choose few of them. For "Gebreken", it has defect code information and description. For "Geconstat", it has inspection date and defect code in respective to license plates. For "Personen", it has make and model of vehicle in respective to license plates. Using Google Translate, I figured which columns I need, first and sixth columns of "Gebreken", first, third, and fifth columns of "Geconstat" (Defects), and first, third, and forth columns of "Person". Thanks to the work from Dr. Settlage, I learned that "fread" is a function which is similar to read.table but much faster and convienient. I use it then to read the specfic data I am interested in.
+
+Next, I use merge function to merge three datasets by plates and defect code. During cleaning data, I translate the columns into English.
+
+```{r Problem7_munge, eval=T, echo=F, cache=F, include=T, results='asis'}
+    ########################### 
+    #Problem7 
+    #munge 
+    ########################### 
+
+    # defect code and description
+    Car_Gebreken_select <- fread(input = "D:/Open_Data_RDW__Gebreken.csv", header = T, select=c(1,6), showProgress=F)
+    # license plate, inspection date and defect code
+    Car_Geconstat_select <- fread(input = "D:/Open_Data_RDW__Geconstateerde_Gebreken.csv", header=T, select=c(1,3,5),showProgress=F)
+    # license plate, make and model of vehicle
+    Car_Person_select <- fread(input = "D:/Personenauto_basisdata.csv", header=T, showProgress = F, select = c(1,3,4))
+    
+    Car_Geconstat_select_2017 <- Car_Geconstat_select[grep("2017",Car_Geconstat_select$"Meld datum door keuringsinstantie"),]
+    # merge datasets
+    Car_plates <- merge(Car_Geconstat_select_2017,Car_Person_select,by="Kenteken")
+    Car_defect <- merge(Car_Gebreken_select,Car_plates,by="Gebrek identificatie")
+    # Clean data
+    Car_defect <- Car_defect[complete.cases(Car_defect),]
+    # Translate
+    colnames(Car_defect) <- c("Defect_Code", "Description", "License_Plate", "Report_Date", "Make", "Model")
+    num_makes <- length(unique(Car_defect$Make))
+    print(num_makes)
+    num_models <- length(unique(Car_defect$Model))
+    print(num_models)
+    # most frequent defects
+    print(sort(table(Car_defect$Defect_Code), decreasing=TRUE)[1:5])
+    # number of defects vs. make
+    defect_make <- as.data.frame(table(Car_defect$Make))
+    colnames(defect_make) <- c("Make", "Num_Def")
+    lm_defect_make <- lm(defect_make$Num_Def~defect_make$Make)
+    ano_defect_make <- anova(lm_defect_make, data=defect_make)
+    # summary(lm_defect_make)
+    knitr::kable(summary(defect_make),caption="Defects Data Summary")
+    knitr::kable(anova(lm_defect_make),caption="ANOVA of fitting Number of defects with Make")
+    # number of defects vs. model
+    defect_model <- as.data.frame(table(Car_defect$Model))
+    colnames(defect_model) <- c("Model", "Num_Def")
+    # lm_defect_model <- lm(defect_model$Num_Def~defect_model$Model)
+    # ano_defect_make <- anova(lm_defect_make, data=defect_make)
+    # summary(lm_defect_make)
+    # summary(ano_defect_make)
+    ########################### 
+```
+
+Hence, there are 503 different makes and 33470 different models reported defects in 2017. And the regression summary and ANOVA table are shown. For the lm and anova analysis, I finished it for Make but keep getting error "cannot allocate vector of size 8.3 Gb" when doing same thing for Model. I guess that might because of the size of dataframe is to large for lm function. Hope you would not mark me wrong. Besides the output of lm summary is too long, so I do not show it here. The codes are in Appendix.
+
+
+\newpage
+#Appendix 1: R code  
+```{r Appendix, ref.label=c("Problem5_Sensory_analysis", "Problem5_LJD_analysis","Problem5_LJD_fig", "Problem5_BBW_analysis", "Problem5_BBW_fig","Problem5_BBW_redo","Problem5_tomato_analysis","Problem6_analysis","Problem7_munge"), echo=TRUE, eval=F, tidy=TRUE, include=T}
+  
+```
