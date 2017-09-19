@@ -65,7 +65,8 @@ When I try to plot the boxplots and violin plots of dev1 and dev2 together, the 
 #Problem6_data
 ###########################
 # Read data and tidy data
-data_pro6 <-  readRDS(file = "D:/STAT_5014/03_good_programming_R_functions/HW3_data.rds") %>%
+data_pro6 <-  readRDS(file = 
+                        "D:/STAT_5014/03_good_programming_R_functions/HW3_data.rds") %>%
   arrange(Observer)
 # Collecting the summary statistics via sum_stat function 
 # Using by function here which is easiser than looping
@@ -160,7 +161,8 @@ print(z)
 curve(3^x-sin(x)+cos(5*x), -3, 0)
 abline(h=0)
 abline(v=z[1:length(z)], lty=6, col="blue")
-plot(1:length(z), z, xlab = "Iterations", ylab = "x's", main = "Iterations on the Path to the Solution")
+plot(1:length(z), z, xlab = "Iterations", ylab = "x's", 
+     main = "Iterations on the Path to the Solution")
 lines(1:length(z), z)
 ###########################
 ```
@@ -211,7 +213,8 @@ Next, I use merge function to merge three datasets by plates and defect code. Du
     # license plate, make and model of vehicle
     Car_Person_select <- fread(input = "D:/Personenauto_basisdata.csv", header=T, showProgress = F, select = c(1,3,4))
     
-    Car_Geconstat_select_2017 <- Car_Geconstat_select[grep("2017",Car_Geconstat_select$"Meld datum door keuringsinstantie"),]
+    Car_Geconstat_select_2017 <- Car_Geconstat_select[grep("2017",
+                                                           Car_Geconstat_select$"Meld datum door keuringsinstantie"),]
     # merge datasets
     Car_plates <- merge(Car_Geconstat_select_2017,Car_Person_select,by="Kenteken")
     Car_defect <- merge(Car_Gebreken_select,Car_plates,by="Gebrek identificatie")
@@ -241,7 +244,8 @@ Next, I use merge function to merge three datasets by plates and defect code. Du
     ano_defect_make <- anova(lm_defect_make, data=defect_make)
     # summary(lm_defect_make)
     knitr::kable(summary(defect_make),caption="Defects Data Summary")
-    knitr::kable(anova(lm_defect_make),caption="ANOVA of fitting Number of defects with Make")
+    knitr::kable(anova(lm_defect_make),
+                 caption="ANOVA of fitting Number of defects with Make")
     # number of defects vs. model
     defect_model <- as.data.frame(table(Car_defect$Model))
     colnames(defect_model) <- c("Model", "Num_Def")
