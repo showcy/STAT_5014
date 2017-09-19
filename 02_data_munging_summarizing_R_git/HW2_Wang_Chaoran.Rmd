@@ -2,8 +2,7 @@
 title: "HW2_Wang_Chaoran"
 author: "Chaoran Wang"
 date: '`r Sys.Date()`'
-header-includes:
-   - \usepackage{float}
+
 output: pdf_document
 ---
 
