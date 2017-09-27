@@ -137,6 +137,10 @@ p8 <- ggplot(prob4_data, aes(x=block, y=depth)) +
    geom_boxplot(stat="boxplot", aes(colour = block)) +
    ggtitle("Boxplot of depth by block")
 multiplot(p1, p2, p3, p4, p5, p6, p7, p8, cols=2)
+p9 <- ggplot(prob4_data, aes(x=depth, y=phosphate)) +
+     geom_point() + facet_wrap(~block) +
+     ggtitle("Scatter Plot for depth vs. phosphate")
+p9
 ##########################
 ```
 According to Cookbook for R, I creat the multiplot function and use the function to create a multipanel plot for the factor exploration. Based on the plots shown above, we could see there is definitely no obvious linear relationship among variables. 'block' looks not like a significant factor because of the first messy scatter plot. For all blocks, most phosphates lie on (15, 42) while most depth lie on (42, 75). While the 7th block has the highest density for phosphate, the 5th block has the highest density for depth. Besides, the 4th block seems have a mild outlier.
