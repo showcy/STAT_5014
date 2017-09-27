@@ -1,0 +1,175 @@
+---
+title: "STAT 5014 Homework 4"
+author: "Chaoran Wang"
+date: '`r Sys.Date()`'
+output:
+  pdf_document: default
+  word_document: default
+header-includes: \usepackage{float}
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(dplyr)
+library(tidyr)
+library(stargazer)
+library(swirl)
+library(data.table)
+library(svTools)
+library(vioplot)
+library(xlsx)
+library(ggplot2)
+library(kableExtra)
+library(ggExtra)
+library(doBy)
+library(GGally)
+library(ellipse)
+```
+## Fineshed Problem 1 to 2
+
+## Problem 3
+According to Roger Peng,the EDA stage focuses on indentifying the relationships between variables, checking hypothesis, checking if there is any problems of data, and identifying if more data is needed.
+
+## Problem 4
+All codes used in this problem are in Appendix. I first read the two sheets in R and combine them.
+```{r Problem4_data, echo=F, eval=T}
+########################### 
+#Problem4_data
+#get data  
+###########################
+prob4_data1 <- read.xlsx("HW4_data.xlsx", sheetIndex = 1)
+prob4_data2 <- read.xlsx("HW4_data.xlsx", sheetIndex = 2)
+prob4_data <- rbind(prob4_data1, prob4_data2)
+##########################
+```
+
+I figure that the "block" column should be factors in this dataset, so I change it to factor from numeric. I create two summary tables below. The second one summarize the data based on each block (factor) which also answer the second question.
+```{r Problem4_analysis, echo=F, eval=T}
+########################### 
+#Problem4_analysis
+###########################
+prob4_data[,'block'] <- as.factor(prob4_data[,'block'])
+knitr::kable(summary(prob4_data), format = "latex", caption="Problem 4 Data Summary 
+             not by block", booktabs = T) %>%
+  kable_styling(latex_options = c("striped", "hold_position"))
+knitr::kable(summaryBy(depth+phosphate ~ block, prob4_data, FUN=c(mean,sd)), 
+             format = "latex", caption="Problem 4 Data Summary by block", 
+             booktabs = T) %>%
+  kable_styling(latex_options = c("striped", "hold_position"))
+##########################
+```
+
+```{r Problem4_multiplot, echo=F, eval=T}
+# Multiple plot function
+# Credit to Cookbook for R
+#
+# ggplot objects can be passed in ..., or to plotlist (as a list of ggplot objects)
+# - cols:   Number of columns in layout
+# - layout: A matrix specifying the layout. If present, 'cols' is ignored.
+#
+# If the layout is something like matrix(c(1,2,3,3), nrow=2, byrow=TRUE),
+# then plot 1 will go in the upper left, 2 will go in the upper right, and
+# 3 will go all the way across the bottom.
+#
+multiplot <- function(..., plotlist=NULL, file, cols=1, layout=NULL) {
+  library(grid)
+
+  # Make a list from the ... arguments and plotlist
+  plots <- c(list(...), plotlist)
+
+  numPlots = length(plots)
+
+  # If layout is NULL, then use 'cols' to determine layout
+  if (is.null(layout)) {
+    # Make the panel
+    # ncol: Number of columns of plots
+    # nrow: Number of rows needed, calculated from # of cols
+    layout <- matrix(seq(1, cols * ceiling(numPlots/cols)),
+                    ncol = cols, nrow = ceiling(numPlots/cols))
+  }
+
+ if (numPlots==1) {
+    print(plots[[1]])
+
+  } else {
+    # Set up the page
+    grid.newpage()
+    pushViewport(viewport(layout = grid.layout(nrow(layout), ncol(layout))))
+
+    # Make each plot, in the correct location
+    for (i in 1:numPlots) {
+      # Get the i,j matrix positions of the regions that contain this subplot
+      matchidx <- as.data.frame(which(layout == i, arr.ind = TRUE))
+
+      print(plots[[i]], vp = viewport(layout.pos.row = matchidx$row,
+                                      layout.pos.col = matchidx$col))
+    }
+  }
+}
+```
+
+```{r Problem4_plot, echo=F, eval=T, include=T, fig.height=13, fig.width=9}
+########################### 
+#Problem4_plot
+###########################
+p1 <- ggplot(prob4_data, aes(x=phosphate, y=depth, colour=block, group=block)) +
+   geom_point() + 
+   ggtitle("Scatter Plot for depth vs. phosphate")
+p2 <- ggplot(prob4_data,  aes(x=phosphate, y=depth, colour=block, group=block)) +
+   geom_point() + stat_smooth(method = "lm") +
+   ggtitle("Regression of depth on phosphate")
+p3 <- ggplot(prob4_data, aes(x=phosphate, colour=block)) +
+   geom_density() +
+   ggtitle("Density of phosphate by block")
+p4 <- ggplot(prob4_data, aes(x=depth, colour=block)) +
+   geom_density() +
+   ggtitle("Density of depth by block")
+p5 <- ggplot(prob4_data, aes(x=phosphate, fill=block)) +
+   geom_histogram(colour="black", binwidth=30) +
+   ggtitle("Histogram of phosphate by block")
+p6 <- ggplot(prob4_data, aes(x=depth, fill=block)) +
+   geom_histogram(colour="black", binwidth=30) +
+   ggtitle("Histogram of depth by block")
+p7 <- ggplot(prob4_data, aes(x=block, y=phosphate)) +
+   geom_boxplot(stat="boxplot", aes(colour = block)) +
+   ggtitle("Boxplot of phosphate by block")
+p8 <- ggplot(prob4_data, aes(x=block, y=depth)) +
+   geom_boxplot(stat="boxplot", aes(colour = block)) +
+   ggtitle("Boxplot of depth by block")
+multiplot(p1, p2, p3, p4, p5, p6, p7, p8, cols=2)
+##########################
+```
+According to Cookbook for R, I creat the multiplot function and use the function to create a multipanel plot for the factor exploration. Based on the plots shown above, we could see there is definitely no obvious linear relationship among variables. 'block' looks not like a significant factor because of the first messy scatter plot. For all blocks, most phosphates lie on (15, 42) while most depth lie on (42, 75). While the 7th block has the highest density for phosphate, the 5th block has the highest density for depth. Besides, the 4th block seems have a mild outlier.
+
+The Density of a Scatter Marginal Plot which comes from Dr. Settlage codes is shown below as well.
+
+```{r Problem4_plot_mar, echo=F, eval=T, include=T, fig.height=8, fig.width=8}
+p <- ggplot(prob4_data, aes(phosphate, depth)) + geom_point() + theme_classic() +
+  ggtitle("Density of a Scatter Marginal Plot")
+ggMarginal(p, prob4_data, type = "histogram", yparams=list(colour="orange"))
+```
+
+Next, I create correlation plots. Instead of using 'pairs' of basic R, I am using 'ggpairs' in GGally package. 
+
+For correlation plots, I am using both 'plotcorr' and 'stat_ellipse'. They look similar to each other.
+
+```{r Problem4_plot_cor, echo=F, eval=T, include=T, fig.height=8, fig.width=8}
+# Basic Scatterplot Matrix
+ggpairs(prob4_data, aes(colour = block, alpha = 0.4), title = "Simple Scatterplot Matrix", 
+        lower = list(combo = wrap("facethist", binwidth = 0.5)))
+correlation <- round(cor(prob4_data[, 2:3]),3)
+plotcorr(correlation, main = "Correlation Plot")
+ggplot(prob4_data, aes(x=phosphate, y=depth, colour=block)) + geom_point() + 
+   stat_ellipse() + ggtitle("Scatter Plot for depth vs. phosphate")
+```
+
+Although the dataset is same from the one in last homework, we are focusing more on factor analysis this time. Considering 'block' as a categprical variable seems to be more reasonable than consider it to be numeric. Hence, the summary statistics which based on 'block' and the plots which treat 'block' as a factor seem to be reasonable.
+
+## Problem 6
+This exercise shows useful tools, statistics and plots, for exploratory data analysis. And ggplot seems create more beautiful plots than basic R.
+
+\newpage
+#Appendix 1: R code  
+```{r Appendix, ref.label=c("Problem4_data", "Problem4_analysis", "Problem4_multiplot", "Problem4_plot", "Problem4_plot_cor"), echo=TRUE, eval=F, tidy=FALSE, tidy.opts=list(blank=FALSE, width.cutoff=20), include=T}
+  
+```
