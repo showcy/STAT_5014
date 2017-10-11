@@ -3,9 +3,9 @@ title: "STAT 5014 Homework 6"
 author: "Chaoran Wang"
 date: '`r Sys.Date()`'
 output:
-  pdf_document: default
-  html_notebook: default
   html_document: default
+  html_notebook: default
+  pdf_document: default
 ---
 
 ```{r setup, include=FALSE}
